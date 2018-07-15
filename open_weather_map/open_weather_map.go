@@ -32,8 +32,14 @@ func k2c(k float32) int {
 	return int(k - 273.15)
 }
 
-//Query retrieve weather from open weather map
-func Query() (*common.WeatherResponse, error) {
+type Client interface {
+	Get() (*Response, error)
+}
+
+type RealClient struct{}
+
+//Get call open weather map api to retrieve weather info
+func (c RealClient) Get() (*Response, error) {
 	url := "http://api.openweathermap.org/data/2.5/weather?q=sydney,AU&appid=2326504fb9b100bee21400190e4dbe6d"
 
 	resp, err := http.Get(url)
@@ -52,9 +58,18 @@ func Query() (*common.WeatherResponse, error) {
 		return nil, fmt.Errorf("Failed to decode response from open weather map with err %v", errDecode)
 	}
 
-	return &common.WeatherResponse{
-		WindSpeed:          int(response.Wind.Speed),
-		TemperatureDegrees: k2c(response.Main.Temp),
-	}, nil
+	return &response, nil
+}
 
+//Query retrieve weather from open weather map
+func Query(c Client) (*common.WeatherResponse, error) {
+	resp, err := c.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	return &common.WeatherResponse{
+		WindSpeed:          int(resp.Wind.Speed),
+		TemperatureDegrees: k2c(resp.Main.Temp),
+	}, nil
 }

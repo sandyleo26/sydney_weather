@@ -51,8 +51,14 @@ func f2c(f int) int {
 	return (f - 32) * 5 / 9
 }
 
-//QueryYahoo call yahoo weather API
-func QueryYahoo() (*common.WeatherResponse, error) {
+type Client interface {
+	Get() (*Response, error)
+}
+
+type RealClient struct{}
+
+//Get call yahoo weather service
+func (c RealClient) Get() (*Response, error) {
 	yahooURL := "https://query.yahooapis.com/v1/public/yql?q=select%20item.condition%2C%20wind%20from%20weather.forecast%20where%20woeid%20%3D%201105779&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys"
 	resp, err := http.Get(yahooURL)
 	if err != nil {
@@ -70,12 +76,22 @@ func QueryYahoo() (*common.WeatherResponse, error) {
 		return nil, fmt.Errorf("Failed to decode response from Yahoo with %v", errDecode)
 	}
 
-	windSpeed, windSpeedErr := strconv.Atoi(yahooResponse.Query.Results.Channel.Wind.Speed)
+	return &yahooResponse, nil
+}
+
+//QueryYahoo call yahoo weather API
+func QueryYahoo(c Client) (*common.WeatherResponse, error) {
+	resp, err := c.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	windSpeed, windSpeedErr := strconv.Atoi(resp.Query.Results.Channel.Wind.Speed)
 	if windSpeedErr != nil {
 		return nil, fmt.Errorf("Failed to retrieve wind speed info with error %v", windSpeedErr)
 	}
 
-	temp, tempErr := strconv.Atoi(yahooResponse.Query.Results.Channel.Item.Condition.Temp)
+	temp, tempErr := strconv.Atoi(resp.Query.Results.Channel.Item.Condition.Temp)
 	if tempErr != nil {
 		return nil, fmt.Errorf("Failed to retrieve temperature info with error %v", tempErr)
 	}

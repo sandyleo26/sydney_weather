@@ -2,11 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/sandyleo26/sydney_weather/open_weather_map"
+
 	"github.com/sandyleo26/sydney_weather/yahoo"
 )
 
@@ -23,16 +23,10 @@ func WeatherHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := yahoo.QueryYahoo()
+	resp, err := GetWeather(yahoo.RealClient{}, open_weather_map.RealClient{})
 	if err != nil {
-		log.Println(err.Error())
-		log.Println("Fall back to open weather map...")
-		resp, err = open_weather_map.Query()
-		if err != nil {
-			log.Println(err.Error())
-			http.Error(w, "weather infomation is not available right now", http.StatusInternalServerError)
-			return
-		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
