@@ -1,0 +1,24 @@
+{
+  "query": {
+    "count": 1,
+    "created": "2018-07-14T14:36:31Z",
+    "lang": "en-US",
+    "results": {
+      "channel": {
+        "wind": {
+          "chill": "37",
+          "direction": "248",
+          "speed": "11"
+        },
+        "item": {
+          "condition": {
+            "code": "31",
+            "date": "Sun, 15 Jul 2018 12:00 AM AEST",
+            "temp": "42",
+            "text": "Clear"
+          }
+        }
+      }
+    }
+  }
+}

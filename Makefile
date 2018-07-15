@@ -3,6 +3,11 @@ NAME := api
 
 default: start
 
+.PHONY: setup
+setup:
+	go get -u github.com/golang/dep/cmd/dep
+	$(MAKE) dep
+
 .PHONY: start
 start:
 	mkdir -p build
