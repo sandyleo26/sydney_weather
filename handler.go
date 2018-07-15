@@ -23,7 +23,7 @@ func WeatherHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := GetWeather(yahoo.RealClient{}, open_weather_map.RealClient{})
+	resp, err := GetWeather(yahoo.RealClient{}, open_weather_map.RealClient{}, true)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
