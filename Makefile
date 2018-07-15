@@ -8,6 +8,10 @@ setup:
 	go get -u github.com/golang/dep/cmd/dep
 	$(MAKE) dep
 
+.PHONY: dep
+dep:
+	@dep ensure -v
+
 .PHONY: start
 start:
 	mkdir -p build
