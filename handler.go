@@ -2,9 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 	"strings"
+
+	"github.com/sandyleo26/sydney_weather/open_weather_map"
+	"github.com/sandyleo26/sydney_weather/yahoo"
 )
 
 //WeatherHandler http handler for weather endpoing
@@ -20,13 +23,19 @@ func WeatherHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	weatherResponse, err := QueryYahoo()
-	fmt.Println("weatherResponse", weatherResponse)
+	resp, err := yahoo.QueryYahoo()
 	if err != nil {
-		http.Error(w, "weather infomation is not available right now", http.StatusInternalServerError)
-		return
+		log.Println(err.Error())
+		log.Println("Fall back to open weather map...")
+		resp, err = open_weather_map.Query()
+		if err != nil {
+			log.Println(err.Error())
+			http.Error(w, "weather infomation is not available right now", http.StatusInternalServerError)
+			return
+		}
 	}
+
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(weatherResponse)
+	json.NewEncoder(w).Encode(resp)
 }

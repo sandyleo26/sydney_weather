@@ -1,10 +1,12 @@
-package main
+package yahoo
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/sandyleo26/sydney_weather/common"
 )
 
 type YahooResponseQueryResultsChannelItemCondition struct {
@@ -44,19 +46,13 @@ type YahooResponse struct {
 	Query YahooResponseQuery `json:"query"`
 }
 
-//WeatherResponse response for weather handler
-type WeatherResponse struct {
-	WindSpeed          int `json:"wind_speed"`
-	TemperatureDegrees int `json:"temperature_degrees"`
-}
-
 //f2c converts Fahrenheit to Celsius
 func f2c(f int) int {
 	return (f - 32) * 5 / 9
 }
 
 //QueryYahoo call yahoo weather API
-func QueryYahoo() (*WeatherResponse, error) {
+func QueryYahoo() (*common.WeatherResponse, error) {
 	yahooURL := "https://query.yahooapis.com/v1/public/yql?q=select%20item.condition%2C%20wind%20from%20weather.forecast%20where%20woeid%20%3D%201105779&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys"
 	resp, err := http.Get(yahooURL)
 	if err != nil {
@@ -84,7 +80,7 @@ func QueryYahoo() (*WeatherResponse, error) {
 		return nil, fmt.Errorf("Failed to retrieve temperature info with error %v", tempErr)
 	}
 
-	return &WeatherResponse{
+	return &common.WeatherResponse{
 		WindSpeed:          windSpeed,
 		TemperatureDegrees: f2c(temp),
 	}, nil
