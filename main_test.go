@@ -1,6 +1,8 @@
-package main_test
+package main
 
 import (
+	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,27 +21,8 @@ func (m mockYahooClient) Get() (*yahoo.Response, error) {
 	return m.Response, m.Error
 }
 
-//
-type mockOpenWeatherMapClient struct {
-	Response *open_weather_map.Response
-	Error    error
-}
-
-func (m mockOpenWeatherMapClient) Get() (*open_weather_map.Response, error) {
-	return m.Response, m.Error
-}
-
-//
-func f2c(f int) int {
-	return int((f - 32) * 5 / 9)
-}
-
-func k2c(k float32) int {
-	return int(k - 273.15)
-}
-
-func TestQueryYahooSuccess(t *testing.T) {
-	mock := mockYahooClient{
+func newMockYahooClient() *mockYahooClient {
+	return &mockYahooClient{
 		Response: &yahoo.Response{
 			Query: yahoo.Query{
 				Results: yahoo.Results{
@@ -58,15 +41,20 @@ func TestQueryYahooSuccess(t *testing.T) {
 		},
 		Error: nil,
 	}
-
-	resp, err := yahoo.QueryYahoo(mock)
-	assert.Nil(t, err)
-	assert.Equal(t, 99, resp.WindSpeed)
-	assert.Equal(t, f2c(70), resp.TemperatureDegrees)
 }
 
-func TestQueryOpenWeatherMapSuccess(t *testing.T) {
-	mock := mockOpenWeatherMapClient{
+//
+type mockOpenWeatherMapClient struct {
+	Response *open_weather_map.Response
+	Error    error
+}
+
+func (m mockOpenWeatherMapClient) Get() (*open_weather_map.Response, error) {
+	return m.Response, m.Error
+}
+
+func newMockOpenWeatherMapClient() *mockOpenWeatherMapClient {
+	return &mockOpenWeatherMapClient{
 		Response: &open_weather_map.Response{
 			Wind: open_weather_map.Wind{
 				Speed: 3.14,
@@ -77,9 +65,54 @@ func TestQueryOpenWeatherMapSuccess(t *testing.T) {
 		},
 		Error: nil,
 	}
+}
+
+//
+func f2c(f int) int {
+	return int((f - 32) * 5 / 9)
+}
+
+func k2c(k float32) int {
+	return int(k - 273.15)
+}
+
+func TestQueryYahooSuccess(t *testing.T) {
+	m := *newMockYahooClient()
+
+	resp, err := yahoo.QueryYahoo(m)
+	assert.Nil(t, err)
+	assert.Equal(t, m.Response.Query.Results.Channel.Wind.Speed, strconv.Itoa(resp.WindSpeed))
+	temp, _ := strconv.Atoi(m.Response.Query.Results.Channel.Item.Condition.Temp)
+	assert.Equal(t, f2c(temp), resp.TemperatureDegrees)
+}
+
+func TestQueryOpenWeatherMapSuccess(t *testing.T) {
+	mock := *newMockOpenWeatherMapClient()
 
 	resp, err := open_weather_map.Query(mock)
 	assert.Nil(t, err)
-	assert.Equal(t, k2c(300.88), resp.TemperatureDegrees)
-	assert.Equal(t, 3, resp.WindSpeed)
+	assert.Equal(t, k2c(mock.Response.Main.Temp), resp.TemperatureDegrees)
+	assert.Equal(t, int(mock.Response.Wind.Speed), resp.WindSpeed)
+}
+
+func TestGetWeatherSuccess(t *testing.T) {
+	my := *newMockYahooClient()
+	mo := *newMockOpenWeatherMapClient()
+
+	resp, err := GetWeather(my, mo)
+	assert.Nil(t, err)
+	assert.Equal(t, my.Response.Query.Results.Channel.Wind.Speed, strconv.Itoa(resp.WindSpeed))
+	temp, _ := strconv.Atoi(my.Response.Query.Results.Channel.Item.Condition.Temp)
+	assert.Equal(t, f2c(temp), resp.TemperatureDegrees)
+}
+
+func TestGetWeatherFailOver(t *testing.T) {
+	my := *newMockYahooClient()
+	my.Error = fmt.Errorf("yahoo is hacked")
+	mo := *newMockOpenWeatherMapClient()
+
+	resp, err := GetWeather(my, mo)
+	assert.Nil(t, err)
+	assert.Equal(t, k2c(mo.Response.Main.Temp), resp.TemperatureDegrees)
+	assert.Equal(t, int(mo.Response.Wind.Speed), resp.WindSpeed)
 }
