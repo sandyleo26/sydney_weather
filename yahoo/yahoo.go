@@ -9,41 +9,41 @@ import (
 	"github.com/sandyleo26/sydney_weather/common"
 )
 
-type YahooResponseQueryResultsChannelItemCondition struct {
+type Condition struct {
 	Code string `json:"code"`
 	Date string `json:"date"`
 	Temp string `json:"temp"`
 	Text string `json:"text"`
 }
 
-type YahooResponseQueryResultsChannelWind struct {
+type Wind struct {
 	Chill     string `json:"chill"`
 	Direction string `json:"direction"`
 	Speed     string `json:"speed"`
 }
 
-type YahooResponseQueryResultsChannelItem struct {
-	Condition YahooResponseQueryResultsChannelItemCondition `json:"condition"`
+type Item struct {
+	Condition Condition `json:"condition"`
 }
 
-type YahooResponseQueryResultsChannel struct {
-	Wind YahooResponseQueryResultsChannelWind `json:"wind"`
-	Item YahooResponseQueryResultsChannelItem `json:"item"`
+type Channel struct {
+	Wind Wind `json:"wind"`
+	Item Item `json:"item"`
 }
 
-type YahooResponseQueryResults struct {
-	Channel YahooResponseQueryResultsChannel `json:"channel`
+type Results struct {
+	Channel Channel `json:"channel`
 }
 
-type YahooResponseQuery struct {
-	Count   int                       `json:"count"`
-	Created string                    `json:"created"`
-	Lang    string                    `json:"lang"`
-	Results YahooResponseQueryResults `json:"results"`
+type Query struct {
+	Count   int     `json:"count"`
+	Created string  `json:"created"`
+	Lang    string  `json:"lang"`
+	Results Results `json:"results"`
 }
 
-type YahooResponse struct {
-	Query YahooResponseQuery `json:"query"`
+type Response struct {
+	Query Query `json:"query"`
 }
 
 //f2c converts Fahrenheit to Celsius
@@ -64,7 +64,7 @@ func QueryYahoo() (*common.WeatherResponse, error) {
 		return nil, fmt.Errorf("request to Yahoo failed with status: %v", resp.StatusCode)
 	}
 
-	yahooResponse := YahooResponse{}
+	yahooResponse := Response{}
 	errDecode := json.NewDecoder(resp.Body).Decode(&yahooResponse)
 	if errDecode != nil {
 		return nil, fmt.Errorf("Failed to decode response from Yahoo with %v", errDecode)
